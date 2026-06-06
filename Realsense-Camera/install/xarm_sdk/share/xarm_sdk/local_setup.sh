@@ -1,0 +1,1 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/ament_cmake_environment_hooks/local_setup.sh

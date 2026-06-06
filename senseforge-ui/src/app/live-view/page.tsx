@@ -4,12 +4,26 @@ import * as React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import { checkCameraStatus } from "@/app/actions";
 
 const TABS = ["RGB", "Depth", "IR", "Detection"] as const;
 type Tab = typeof TABS[number];
 
 export default function LiveViewPage() {
   const [activeTab, setActiveTab] = React.useState<Tab>("RGB");
+  const [cameraName, setCameraName] = React.useState("Detecting...");
+  const [isConnected, setIsConnected] = React.useState(false);
+
+  React.useEffect(() => {
+    const check = async () => {
+      const res = await checkCameraStatus();
+      setCameraName(res.name);
+      setIsConnected(res.connected);
+    };
+    check();
+    const interval = setInterval(check, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300">
@@ -18,10 +32,14 @@ export default function LiveViewPage() {
           <div className="flex items-center gap-4">
             <span>Live View</span>
             <span className="text-sm font-normal text-secondary border-l border-subtle pl-4">
-              D435i
+              {cameraName}
             </span>
-            <Badge variant="connected">Streaming</Badge>
-            <span className="text-sm font-mono text-tertiary ml-2">30 FPS · 1280×720</span>
+            {isConnected ? (
+              <Badge variant="connected">Streaming</Badge>
+            ) : (
+              <Badge variant="ready">Disconnected</Badge>
+            )}
+            <span className="text-sm font-mono text-tertiary ml-2">{isConnected ? "30 FPS" : "-- FPS"} · 1280×720</span>
           </div>
         }
       />
@@ -85,7 +103,7 @@ export default function LiveViewPage() {
             30 FPS • 1280×720
           </div>
           <div className="absolute bottom-4 left-4 bg-black/60 text-white text-[11px] font-mono px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-            Intel RealSense D435i
+            {cameraName}
           </div>
           <div className="absolute bottom-4 right-4 bg-black/60 text-white text-[11px] font-mono px-2 py-1 rounded backdrop-blur-sm border border-white/10 uppercase tracking-wider">
             {activeTab} MODE

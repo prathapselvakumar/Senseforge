@@ -1,0 +1,1 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/ur_description/ament_cmake_environment_hooks/local_setup.bash

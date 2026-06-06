@@ -12,7 +12,7 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { ArrowLeft, Play, Zap, Loader2, CheckCircle2, Trash2, Bot } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { openNativeFolderPicker, generateWorkspace, getDefaultWorkspacePath, simulateWorkspace, getWorkspaces, deleteWorkspace } from "@/app/actions";
+import { openNativeFolderPicker, generateWorkspace, getDefaultWorkspacePath, simulateWorkspace, getWorkspaces, deleteWorkspace, checkCameraStatus } from "@/app/actions";
 
 export default function ConfigurationPage() {
   const [depthEnabled, setDepthEnabled] = React.useState(true);
@@ -49,6 +49,18 @@ export default function ConfigurationPage() {
       getWorkspaces(workspacePath).then(setWorkspaces);
     }
   }, [workspacePath]);
+
+  React.useEffect(() => {
+    checkCameraStatus().then(res => {
+      if (res.connected && res.name) {
+        if (res.name.includes("D435i")) setCameraType("D435i");
+        else if (res.name.includes("D455")) setCameraType("D455");
+        else if (res.name.includes("D415")) setCameraType("D415");
+        else if (res.name.includes("D405")) setCameraType("D405");
+        else setCameraType("webcam");
+      }
+    });
+  }, []);
 
   const handleDelete = async () => {
     if (!workspaces.includes(workspaceName)) return;

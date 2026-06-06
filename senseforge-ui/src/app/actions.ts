@@ -285,10 +285,18 @@ export async function getSystemStats() {
 export async function checkCameraStatus() {
   try {
     const { stdout } = await execAsync('lsusb');
-    // Check if Realsense or any USB camera is connected
-    const isConnected = stdout.toLowerCase().includes('realsense') || stdout.toLowerCase().includes('camera');
-    return { connected: isConnected };
+    const lower = stdout.toLowerCase();
+    const isConnected = lower.includes('realsense') || lower.includes('camera') || lower.includes('video');
+    
+    let cameraName = "System Webcam";
+    if (lower.includes('d435i')) cameraName = "Intel RealSense D435i";
+    else if (lower.includes('d455')) cameraName = "Intel RealSense D455";
+    else if (lower.includes('d415')) cameraName = "Intel RealSense D415";
+    else if (lower.includes('d405')) cameraName = "Intel RealSense D405";
+    else if (lower.includes('realsense')) cameraName = "Intel RealSense Camera";
+
+    return { connected: isConnected, name: isConnected ? cameraName : "No Camera" };
   } catch (e) {
-    return { connected: false };
+    return { connected: false, name: "No Camera" };
   }
 }

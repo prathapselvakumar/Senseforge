@@ -1,0 +1,1 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/src/xarm_ros2/xarm_description/config/kinematics/gen_kinematics_params.py

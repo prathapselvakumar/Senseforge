@@ -1,0 +1,1 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/realsense2_camera_msgs/ament_cmake_core/realsense2_camera_msgsConfig-version.cmake

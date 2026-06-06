@@ -1,0 +1,10 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/uninstall.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/xarm_sdk_uninstall.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/xarm_cxx_sdk.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/test.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/edit_cache.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/rebuild_cache.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/list_install_components.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/install.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/install/local.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/xarm_sdk/CMakeFiles/install/strip.dir

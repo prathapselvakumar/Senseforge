@@ -1,0 +1,9 @@
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/uninstall.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/mbot_demo_uninstall.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/test.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/edit_cache.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/rebuild_cache.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/list_install_components.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/install.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/install/local.dir
+/home/laptop17/Projects/Realsense_Software/Realsense-Camera/build/mbot_demo/CMakeFiles/install/strip.dir

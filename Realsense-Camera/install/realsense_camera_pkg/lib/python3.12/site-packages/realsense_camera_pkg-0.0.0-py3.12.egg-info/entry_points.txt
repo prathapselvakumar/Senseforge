@@ -1,0 +1,4 @@
+[console_scripts]
+hsv_node = realsense_camera_pkg.hsv_node:main
+object_shape_color_node = realsense_camera_pkg.object_shape_color_node:main
+yolo_world_node = realsense_camera_pkg.yolo_world_node:main
