@@ -23,6 +23,7 @@ export default function ConfigurationPage() {
   const [workspaceName, setWorkspaceName] = React.useState("qc_workspace_01");
   const [confidence, setConfidence] = React.useState(50);
   const [iou, setIou] = React.useState(40);
+  const [detectionMode, setDetectionMode] = React.useState("yolo_world");
   
   // Hardware Settings
   const [cameraType, setCameraType] = React.useState("D435i");
@@ -87,6 +88,7 @@ export default function ConfigurationPage() {
     const config = {
       confidence: confidence / 100,
       iou: iou / 100,
+      detectionMode,
       cameraType,
       requiresArm,
       armType,
@@ -106,7 +108,10 @@ export default function ConfigurationPage() {
     setGenerateMessage(null);
     const config = {
       confidence: confidence / 100,
-      iou: iou / 100
+      iou: iou / 100,
+      detectionMode,
+      cameraType,
+      requiresArm
     };
     const res = await simulateWorkspace(workspacePath, workspaceName, config);
     setIsSimulating(false);
@@ -197,7 +202,18 @@ export default function ConfigurationPage() {
             <CardTitle>Model Settings</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-4 items-center gap-4 border-b border-subtle pb-4">
+              <label className="text-sm font-medium text-secondary leading-tight">Mode</label>
+              <div className="col-span-3">
+                <Select value={detectionMode} onChange={(e) => setDetectionMode(e.target.value)}>
+                  <option value="yolo_world">YOLO-World</option>
+                  <option value="face_detection">Face Detection</option>
+                  <option value="shape_color">Shape & Color</option>
+                </Select>
+              </div>
+            </div>
+
+            <div className={`grid grid-cols-4 items-center gap-4 ${detectionMode !== 'yolo_world' ? 'opacity-50 pointer-events-none' : ''}`}>
               <label className="text-sm font-medium text-secondary">Model</label>
               <div className="col-span-3">
                 <Select defaultValue="yolov8n">

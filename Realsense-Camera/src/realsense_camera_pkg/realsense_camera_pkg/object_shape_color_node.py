@@ -46,6 +46,11 @@ class ObjectShapeColorNode(Node):
         super().__init__('object_shape_color_node')
         self.get_logger().info('Initializing Leo Rover Dynamic Color Detection Node...')
 
+        from sensor_msgs.msg import Image
+        from cv_bridge import CvBridge
+        self.image_pub = self.create_publisher(Image, '/shape_color/annotated_image', 10)
+        self.cv_bridge = CvBridge()
+
         self.depth_buffer = deque(maxlen=5)
 
         if USE_REALSENSE:
@@ -166,8 +171,20 @@ class ObjectShapeColorNode(Node):
                 cv2.putText(frame, depth_text, (20,70),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,255), 2)
 
-        cv2.imshow("Leo Rover Color Detection", frame)
-        cv2.waitKey(1)
+        if USE_REALSENSE:
+            # We skip cv2.imshow for RViz integration
+            # cv2.imshow("Leo Rover Color Detection", frame)
+            # cv2.waitKey(1)
+            pass
+        else:
+            cv2.imshow("Leo Rover Color Detection", frame)
+            cv2.waitKey(1)
+
+        try:
+            ros_image = self.cv_bridge.cv2_to_imgmsg(frame, encoding="bgr8")
+            self.image_pub.publish(ros_image)
+        except Exception as e:
+            pass
 
     def destroy_node(self):
         super().destroy_node()
