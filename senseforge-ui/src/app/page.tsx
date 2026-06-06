@@ -5,17 +5,49 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Play, Camera, CircleDot, Activity, FolderCode } from "lucide-react";
+import { Camera, Activity, FolderCode, Trash2, Loader2 } from "lucide-react";
+import { getDefaultWorkspacePath, getWorkspaces, deleteWorkspace, getSystemStats, checkCameraStatus } from "@/app/actions";
 
 export default function DashboardPage() {
   const [greeting, setGreeting] = React.useState("Good day");
+  const [workspaces, setWorkspaces] = React.useState<string[]>([]);
+  const [basePath, setBasePath] = React.useState("");
+  const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
+  const [sysStats, setSysStats] = React.useState({ cpu: 0, ram: 0 });
+  const [cameraConnected, setCameraConnected] = React.useState(false);
 
   React.useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good morning");
     else if (hour < 18) setGreeting("Good afternoon");
     else setGreeting("Good evening");
+
+    getDefaultWorkspacePath().then(path => {
+      setBasePath(path);
+      getWorkspaces(path).then(setWorkspaces);
+    });
+
+    const fetchStats = async () => {
+      const stats = await getSystemStats();
+      setSysStats(stats);
+      const cam = await checkCameraStatus();
+      setCameraConnected(cam.connected);
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 2000);
+    return () => clearInterval(interval);
   }, []);
+
+  const handleDelete = async (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(name);
+    const res = await deleteWorkspace(basePath, name);
+    if (res.success) {
+      setWorkspaces(prev => prev.filter(w => w !== name));
+    }
+    setIsDeleting(null);
+  };
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
@@ -23,7 +55,7 @@ export default function DashboardPage() {
         title={`${greeting} — SenseForge is ready.`}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
         {/* Camera Status Card */}
         <Card>
           <CardHeader>
@@ -33,28 +65,15 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <div className="text-xl font-semibold">D435i</div>
+            <div className="text-xl font-semibold">{cameraConnected ? "D435i Detected" : "No Camera"}</div>
             <div className="flex items-center justify-between">
-              <Badge variant="connected">Live</Badge>
-              <span className="text-sm text-secondary">30 FPS</span>
+              {cameraConnected ? (
+                <Badge variant="connected">Live</Badge>
+              ) : (
+                <Badge variant="ready">Disconnected</Badge>
+              )}
+              <span className="text-sm text-secondary">{cameraConnected ? "30 FPS" : "-- FPS"}</span>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* ROS2 Status Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-secondary">ROS2</span>
-              <CircleDot className="w-4 h-4 text-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <div className="text-xl font-semibold flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-green" />
-              Active
-            </div>
-            <div className="text-sm text-secondary">Humble</div>
           </CardContent>
         </Card>
 
@@ -67,17 +86,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <div className="text-xl font-semibold truncate">qc_ws</div>
-            <div className="text-sm text-secondary">/home/user/ros2_ws</div>
+            <div className="text-xl font-semibold truncate">{workspaces.length > 0 ? workspaces[0] : "None"}</div>
+            <div className="text-sm text-secondary truncate">{basePath}</div>
           </CardContent>
-        </Card>
-
-        {/* Quick Launch */}
-        <Card className="border-accent bg-accent-muted flex flex-col justify-center items-center h-[120px]">
-          <Button variant="primary" size="lg" className="w-full max-w-[140px]">
-            <Play className="w-4 h-4 mr-2 fill-current" />
-            Resume
-          </Button>
         </Card>
       </div>
 
@@ -94,20 +105,26 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between text-sm">
                 <span>CPU</span>
-                <span className="text-secondary">76%</span>
+                <span className="text-secondary">{sysStats.cpu}%</span>
               </div>
               <div className="w-full bg-overlay h-2 rounded-full overflow-hidden">
-                <div className="bg-accent h-full rounded-full w-[76%]" />
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${sysStats.cpu > 80 ? 'bg-red-500' : 'bg-accent'}`}
+                  style={{ width: `${sysStats.cpu}%` }} 
+                />
               </div>
             </div>
             
             <div className="flex flex-col gap-2">
               <div className="flex justify-between text-sm">
                 <span>RAM</span>
-                <span className="text-secondary">58%</span>
+                <span className="text-secondary">{sysStats.ram}%</span>
               </div>
               <div className="w-full bg-overlay h-2 rounded-full overflow-hidden">
-                <div className="bg-accent h-full rounded-full w-[58%]" />
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${sysStats.ram > 80 ? 'bg-red-500' : 'bg-accent'}`}
+                  style={{ width: `${sysStats.ram}%` }} 
+                />
               </div>
             </div>
 
@@ -125,27 +142,42 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Workspaces */}
-        <Card className="col-span-1">
+        <Card className="col-span-1 flex flex-col">
           <CardHeader>
-            <CardTitle>Recent Workspaces</CardTitle>
+            <CardTitle>SenseForge Workspaces</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {[
-              { name: "qc_conveyor_ws", time: "2 hours ago" },
-              { name: "slam_ws", time: "Yesterday" },
-              { name: "rl_pick_place_ws", time: "3 days ago" },
-            ].map((ws) => (
-              <div
-                key={ws.name}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-elevated cursor-pointer transition-colors border border-transparent hover:border-default"
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium">{ws.name}</span>
-                  <span className="text-[11px] text-tertiary">{ws.time}</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-tertiary" />
+          <CardContent className="flex flex-col gap-2 flex-1 overflow-y-auto">
+            {workspaces.length === 0 ? (
+              <div className="text-center text-sm text-tertiary py-8 border border-dashed border-subtle rounded-lg">
+                No workspaces found in <br/><span className="font-mono text-xs">{basePath || '...'}</span>
               </div>
-            ))}
+            ) : (
+              workspaces.map((wsName) => (
+                <div
+                  key={wsName}
+                  className="flex items-center justify-between p-3 rounded-md bg-overlay hover:bg-elevated transition-colors border border-subtle hover:border-default group"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-8 h-8 rounded bg-surface flex items-center justify-center shrink-0 border border-subtle">
+                      <FolderCode className="w-4 h-4 text-accent" />
+                    </div>
+                    <div className="flex flex-col truncate">
+                      <span className="font-medium text-sm truncate">{wsName}</span>
+                      <span className="text-[11px] text-tertiary truncate">{basePath}</span>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-500"
+                    onClick={(e) => handleDelete(wsName, e)}
+                    disabled={isDeleting === wsName}
+                  >
+                    {isDeleting === wsName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </Button>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

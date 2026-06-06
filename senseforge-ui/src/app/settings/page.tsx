@@ -6,7 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
-import { RotateCcw, Plug, Save, Download } from "lucide-react";
+import { RotateCcw, Plug, Save, Download, Loader2 } from "lucide-react";
+import { openNativeFolderPicker } from "@/app/actions";
 
 import { useTheme } from "next-themes";
 
@@ -14,6 +15,25 @@ export default function SettingsPage() {
   const [autoDetect, setAutoDetect] = React.useState(true);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+
+  const [defaultSavePath, setDefaultSavePath] = React.useState("/home/laptop17/ros2_ws");
+  const [gazeboPathOverride, setGazeboPathOverride] = React.useState("");
+
+  const [isBrowsing, setIsBrowsing] = React.useState(false);
+
+  const handleBrowseSavePath = async () => {
+    setIsBrowsing(true);
+    const res = await openNativeFolderPicker(defaultSavePath);
+    if (res.path) setDefaultSavePath(res.path);
+    setIsBrowsing(false);
+  };
+
+  const handleBrowseGazeboPath = async () => {
+    setIsBrowsing(true);
+    const res = await openNativeFolderPicker(gazeboPathOverride || "/");
+    if (res.path) setGazeboPathOverride(res.path);
+    setIsBrowsing(false);
+  };
 
   React.useEffect(() => {
     setMounted(true);
@@ -52,15 +72,19 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
               <label className="text-sm font-medium text-secondary">Default Save Path</label>
               <div className="col-span-3 flex gap-3">
-                <Input defaultValue="/home/user/ros2_ws" className="flex-1" />
-                <Button variant="secondary">Browse</Button>
+                <Input value={defaultSavePath} onChange={e => setDefaultSavePath(e.target.value)} className="flex-1" />
+                <Button variant="secondary" disabled={isBrowsing} onClick={handleBrowseSavePath}>
+                  {isBrowsing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Browse"}
+                </Button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center pt-2 border-t border-subtle">
               <label className="text-sm font-medium text-secondary">Gazebo Path Override</label>
               <div className="col-span-3 flex gap-3">
-                <Input placeholder="/opt/ros/humble/bin/gzserver" className="flex-1" />
-                <Button variant="secondary">Browse</Button>
+                <Input placeholder="/opt/ros/humble/bin/gzserver" value={gazeboPathOverride} onChange={e => setGazeboPathOverride(e.target.value)} className="flex-1" />
+                <Button variant="secondary" disabled={isBrowsing} onClick={handleBrowseGazeboPath}>
+                  {isBrowsing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Browse"}
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -78,22 +102,22 @@ export default function SettingsPage() {
                 <span className="text-xs text-tertiary">Live preview</span>
               </div>
               <div className="col-span-3 flex gap-3">
-                <Button 
-                  variant={mounted && theme === "dark" ? "primary" : "secondary"} 
+                <Button
+                  variant={mounted && theme === "dark" ? "primary" : "secondary"}
                   className="w-24"
                   onClick={() => setTheme("dark")}
                 >
                   Dark
                 </Button>
-                <Button 
-                  variant={mounted && theme === "light" ? "primary" : "secondary"} 
+                <Button
+                  variant={mounted && theme === "light" ? "primary" : "secondary"}
                   className="w-24"
                   onClick={() => setTheme("light")}
                 >
                   Light
                 </Button>
-                <Button 
-                  variant={mounted && theme === "system" ? "primary" : "secondary"} 
+                <Button
+                  variant={mounted && theme === "system" ? "primary" : "secondary"}
                   className="w-24"
                   onClick={() => setTheme("system")}
                 >
@@ -139,7 +163,7 @@ export default function SettingsPage() {
             Reset to Defaults
           </Button>
         </div>
-        
+
         {/* Main Save Action */}
         <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-subtle bg-base/80 backdrop-blur-md flex justify-end gap-3 z-50 lg:left-[220px]">
           <Button variant="secondary">Cancel</Button>

@@ -35,11 +35,17 @@ const generateMockData = () => {
 };
 
 export default function TrainingPage() {
-  const [data, setData] = React.useState(generateMockData());
+  const [data, setData] = React.useState([{ episode: 0, reward: 0, average: 0 }]);
   const [isTraining, setIsTraining] = React.useState(true);
+  const [mounted, setMounted] = React.useState(false);
   const currentEp = data.length - 1;
   const currentReward = data[currentEp].reward;
   const bestReward = Math.max(...data.map(d => d.reward));
+
+  React.useEffect(() => {
+    setData(generateMockData());
+    setMounted(true);
+  }, []);
 
   // Simulate live updating
   React.useEffect(() => {
@@ -118,52 +124,54 @@ export default function TrainingPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 pt-16">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
-                <XAxis 
-                  dataKey="episode" 
-                  stroke="#606060" 
-                  tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'monospace' }}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis 
-                  stroke="#606060" 
-                  tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'monospace' }}
-                  tickLine={false}
-                  axisLine={false}
-                  dx={-10}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1A1A1A', borderColor: '#3A3A3A', borderRadius: '8px' }}
-                  itemStyle={{ color: '#F5F5F5', fontFamily: 'monospace' }}
-                  labelStyle={{ color: '#A0A0A0', marginBottom: '4px' }}
-                />
-                <ReferenceLine y={0} stroke="#3A3A3A" />
-                <Line 
-                  type="monotone" 
-                  dataKey="average" 
-                  stroke="#3B82F6" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5" 
-                  dot={false}
-                  name="Running Avg"
-                  isAnimationActive={false}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="reward" 
-                  stroke="#A855F7" 
-                  strokeWidth={2} 
-                  dot={false}
-                  name="Reward"
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="flex-1 p-0 pt-16 min-h-[300px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
+                <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
+                  <XAxis 
+                    dataKey="episode" 
+                    stroke="#606060" 
+                    tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'monospace' }}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke="#606060" 
+                    tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'monospace' }}
+                    tickLine={false}
+                    axisLine={false}
+                    dx={-10}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1A1A1A', borderColor: '#3A3A3A', borderRadius: '8px' }}
+                    itemStyle={{ color: '#F5F5F5', fontFamily: 'monospace' }}
+                    labelStyle={{ color: '#A0A0A0', marginBottom: '4px' }}
+                  />
+                  <ReferenceLine y={0} stroke="#3A3A3A" />
+                  <Line 
+                    type="monotone" 
+                    dataKey="average" 
+                    stroke="#3B82F6" 
+                    strokeWidth={2} 
+                    strokeDasharray="5 5" 
+                    dot={false}
+                    name="Running Avg"
+                    isAnimationActive={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="reward" 
+                    stroke="#A855F7" 
+                    strokeWidth={2} 
+                    dot={false}
+                    name="Reward"
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 

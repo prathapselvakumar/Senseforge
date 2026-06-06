@@ -22,7 +22,6 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/use-cases", label: "Use Cases", icon: Grid3X3 },
   { href: "/configuration", label: "Configuration", icon: SlidersHorizontal },
-  { href: "/simulation", label: "Simulation", icon: Box, dot: "amber" },
   { href: "/live-view", label: "Live View", icon: Camera, dot: "green" },
   { href: "/workspace", label: "Workspace", icon: FolderCode },
   { href: "/training", label: "Training", icon: BrainCircuit, dot: "purple" },
