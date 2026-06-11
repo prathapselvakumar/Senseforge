@@ -4,7 +4,7 @@ import * as React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { checkCameraStatus } from "@/app/actions";
+import { checkCameraStatus, getCurrentStreamTopic } from "@/app/actions";
 
 const TABS = ["RGB", "Depth", "IR", "Detection"] as const;
 type Tab = typeof TABS[number];
@@ -13,12 +13,15 @@ export default function LiveViewPage() {
   const [activeTab, setActiveTab] = React.useState<Tab>("RGB");
   const [cameraName, setCameraName] = React.useState("Detecting...");
   const [isConnected, setIsConnected] = React.useState(false);
+  const [streamTopic, setStreamTopic] = React.useState<string>("");
 
   React.useEffect(() => {
     const check = async () => {
       const res = await checkCameraStatus();
       setCameraName(res.name);
       setIsConnected(res.connected);
+      const topic = await getCurrentStreamTopic();
+      setStreamTopic(topic);
     };
     check();
     const interval = setInterval(check, 2000);
@@ -76,25 +79,29 @@ export default function LiveViewPage() {
               }
             )}
           >
-            <span className="text-white/20 font-mono text-xl tracking-widest absolute">
-              [ {activeTab.toUpperCase()} FEED ]
-            </span>
-
-            {/* Bounding Box Mock (Detection mode only) */}
-            {activeTab === "Detection" && (
-              <div className="absolute top-[30%] left-[40%] w-[120px] h-[120px] border-2 border-[#22C55E] bg-[#22C55E]/10">
-                <div className="absolute -top-[22px] -left-0.5 bg-[#22C55E] text-black text-[11px] font-bold px-1.5 py-0.5">
-                  Widget 0.94
-                </div>
-              </div>
-            )}
-            
-            {activeTab === "Detection" && (
-              <div className="absolute top-[45%] left-[60%] w-[180px] h-[140px] border-2 border-[#3B82F6] bg-[#3B82F6]/10">
-                <div className="absolute -top-[22px] -left-0.5 bg-[#3B82F6] text-white text-[11px] font-bold px-1.5 py-0.5">
-                  Gear 0.82
-                </div>
-              </div>
+            {!isConnected || !streamTopic ? (
+              <span className="text-white/20 font-mono text-xl tracking-widest absolute">
+                [ CAMERA NOT CONNECTED ]
+              </span>
+            ) : (
+              <img 
+                src={`http://localhost:8080/stream?topic=${streamTopic}`} 
+                alt="Live Camera Feed" 
+                className={cn(
+                  "w-full h-full object-contain",
+                  activeTab === "Depth" ? "mix-blend-luminosity opacity-50" : "",
+                  activeTab === "IR" ? "grayscale" : ""
+                )}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class="text-white/20 font-mono text-xl tracking-widest absolute">[ WAITING FOR STREAM ]</span>');
+                }}
+                onLoad={(e) => {
+                  e.currentTarget.style.display = 'block';
+                  const waitingMsg = e.currentTarget.parentElement?.querySelector('span');
+                  if (waitingMsg) waitingMsg.remove();
+                }}
+              />
             )}
           </div>
 

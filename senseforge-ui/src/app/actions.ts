@@ -116,7 +116,7 @@ export async function generateWorkspace(
   </xacro:sensor_d455>`;
       } else {
         cameraInclude = `
-  <!-- Placeholder for webcam -->
+  <!-- Placeholder for missing camera -->
   <link name="camera_link"/>
   <joint name="camera_joint" type="fixed">
     <parent link="${mountParent}"/>
@@ -174,6 +174,13 @@ def generate_launch_description():
         arguments=['-d', rviz_config],
         output='screen',
         on_exit=Shutdown()
+    )
+
+    web_video_node = Node(
+        package='web_video_server',
+        executable='web_video_server',
+        parameters=[{'port': 8080}],
+        output='screen'
     )
 
     cv_node_name = LaunchConfiguration('cv_node', default='yolo_world_node')
@@ -281,6 +288,17 @@ ament_package()`;
         } else if (config.armType === "xarm6") {
           const xarmDescPath = path.join(baseSrcPath, "xarm_ros2", "xarm_description");
           if (fs.existsSync(xarmDescPath)) await execAsync(`cp -r ${xarmDescPath} ${srcPath}/`);
+        } else if (config.armType === "franka") {
+          const frankaDescPath = path.join(baseSrcPath, "franka_ros2", "franka_description");
+          if (fs.existsSync(frankaDescPath)) await execAsync(`cp -r ${frankaDescPath} ${srcPath}/`);
+        }
+
+        if (config.endEffector === "gripper_2f") {
+          const robotiqDescPath = path.join(baseSrcPath, "ros2_robotiq_gripper", "robotiq_description");
+          if (fs.existsSync(robotiqDescPath)) await execAsync(`cp -r ${robotiqDescPath} ${srcPath}/`);
+        } else if (config.endEffector === "vacuum") {
+          const vacuumDescPath = path.join(baseSrcPath, "vacuum_gripper");
+          if (fs.existsSync(vacuumDescPath)) await execAsync(`cp -r ${vacuumDescPath} ${srcPath}/`);
         }
       }
 
@@ -298,67 +316,10 @@ ament_package()`;
       if (config.iou) {
         content = content.replace(/self\.declare_parameter\('nms_threshold', [0-9.]+\)/, `self.declare_parameter('nms_threshold', ${config.iou})`);
       }
-      if (config.cameraType === "System Webcam") {
-        content = content.replace(
-          "self.pipeline = rs.pipeline()",
-          "self.use_realsense = False\n        self.cap = cv2.VideoCapture(0)"
-        );
-        content = content.replace("self.pipeline.start(self.config)", "");
-        
-        const originalPolling = `        frames = self.pipeline.poll_for_frames()
-        if not frames:
-            return
-
-        color_frame = frames.get_color_frame()
-        depth_frame = frames.get_depth_frame()
-
-        if not color_frame or not depth_frame:
-            return
-
-        color_image = np.asanyarray(color_frame.get_data())`;
-
-        const newPolling = `        if not hasattr(self, 'use_realsense') or self.use_realsense:
-            frames = self.pipeline.poll_for_frames()
-            if not frames: return
-            color_frame = frames.get_color_frame()
-            depth_frame = frames.get_depth_frame()
-            if not color_frame or not depth_frame: return
-            color_image = np.asanyarray(color_frame.get_data())
-        else:
-            ret, frame = self.cap.read()
-            if not ret: return
-            color_image = frame
-            depth_frame = None`;
-
-        content = content.replace(originalPolling, newPolling);
-
-        const originalDepth = `                depth_value = float(depth_frame.get_distance(x_pixel, y_pixel))
-
-                depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
-                depth_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x_pixel, y_pixel], depth_value)
-
-                xyz_str = f"({depth_point[0]:.2f}, {depth_point[1]:.2f}, {depth_point[2]:.2f})"`;
-
-        const newDepth = `                if depth_frame:
-                    depth_value = float(depth_frame.get_distance(x_pixel, y_pixel))
-                    depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
-                    depth_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x_pixel, y_pixel], depth_value)
-                    xyz_str = f"({depth_point[0]:.2f}, {depth_point[1]:.2f}, {depth_point[2]:.2f})"
-                else:
-                    depth_value = 0.0
-                    depth_point = [0.0, 0.0, 0.0]
-                    xyz_str = "(0.0, 0.0, 0.0)"`;
-        content = content.replace(originalDepth, newDepth);
-      }
       fs.writeFileSync(targetNodePath, content);
     }
 
     const shapeColorNodePath = path.join(srcPath, "realsense_camera_pkg/realsense_camera_pkg/object_shape_color_node.py");
-    if (fs.existsSync(shapeColorNodePath) && config.cameraType === "System Webcam") {
-      let content = fs.readFileSync(shapeColorNodePath, "utf-8");
-      content = content.replace("USE_REALSENSE = True", "USE_REALSENSE = False");
-      fs.writeFileSync(shapeColorNodePath, content);
-    }
 
     if (config.detectionMode === 'face_detection') {
       const faceNodePath = path.join(srcPath, "realsense_camera_pkg/realsense_camera_pkg/face_detection_node.py");
@@ -379,7 +340,7 @@ class FaceDetectionNode(Node):
         
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
-        self.use_realsense = ${config.cameraType !== "System Webcam" ? "True" : "False"}
+        self.use_realsense = True
         
         if self.use_realsense:
             self.pipeline = rs.pipeline()
@@ -479,6 +440,12 @@ export async function getDefaultWorkspacePath() {
   return (process.env.HOME || "/home/user") + "/ros2_ws";
 }
 
+let currentStreamTopic = "/yolo_world/annotated_image";
+
+export async function getCurrentStreamTopic() {
+  return currentStreamTopic;
+}
+
 export async function simulateWorkspace(
   basePath: string,
   baseWorkspaceName: string,
@@ -518,8 +485,12 @@ export async function simulateWorkspace(
     let nodeName = "yolo_world_node";
     if (config.detectionMode === 'face_detection') {
       nodeName = "face_detection_node";
+      currentStreamTopic = "/face_detection/annotated_image";
     } else if (config.detectionMode === 'shape_color') {
       nodeName = "object_shape_color_node";
+      currentStreamTopic = "/shape_color/annotated_image";
+    } else {
+      currentStreamTopic = "/yolo_world/annotated_image";
     }
 
     const rosCmd = `cd ${fullPath} && source ${setupScript} && colcon build && ${wsSourceCmd} export DISPLAY=:0 && ros2 launch senseforge_scene simulation.launch.py cv_node:=${nodeName} confidence:=${config.confidence} iou:=${config.iou}`;
@@ -591,14 +562,13 @@ export async function checkCameraStatus() {
   try {
     const { stdout } = await execAsync('lsusb');
     const lower = stdout.toLowerCase();
-    const isConnected = lower.includes('realsense') || lower.includes('camera') || lower.includes('video');
+    const isConnected = lower.includes('realsense') || lower.includes('d435') || lower.includes('d455') || lower.includes('d415') || lower.includes('d405');
     
-    let cameraName = "System Webcam";
+    let cameraName = "Intel RealSense Camera";
     if (lower.includes('d435i')) cameraName = "Intel RealSense D435i";
     else if (lower.includes('d455')) cameraName = "Intel RealSense D455";
     else if (lower.includes('d415')) cameraName = "Intel RealSense D415";
     else if (lower.includes('d405')) cameraName = "Intel RealSense D405";
-    else if (lower.includes('realsense')) cameraName = "Intel RealSense Camera";
 
     return { connected: isConnected, name: isConnected ? cameraName : "No Camera" };
   } catch (e) {

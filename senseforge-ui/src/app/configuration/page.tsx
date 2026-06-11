@@ -18,15 +18,15 @@ export default function ConfigurationPage() {
   const [depthEnabled, setDepthEnabled] = React.useState(true);
   const [irEnabled, setIrEnabled] = React.useState(false);
   const [imuEnabled, setImuEnabled] = React.useState(true);
-  
+
   const [workspacePath, setWorkspacePath] = React.useState("");
   const [workspaceName, setWorkspaceName] = React.useState("qc_workspace_01");
   const [confidence, setConfidence] = React.useState(50);
   const [iou, setIou] = React.useState(40);
   const [detectionMode, setDetectionMode] = React.useState("yolo_world");
-  
+
   // Hardware Settings
-  const [cameraType, setCameraType] = React.useState("D435i");
+  const [cameraType, setCameraType] = React.useState("");
   const [armType, setArmType] = React.useState("ur5e");
   const [endEffector, setEndEffector] = React.useState("gripper_2f");
 
@@ -38,7 +38,7 @@ export default function ConfigurationPage() {
   const [isBrowsing, setIsBrowsing] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSimulating, setIsSimulating] = React.useState(false);
-  const [generateMessage, setGenerateMessage] = React.useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [generateMessage, setGenerateMessage] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [workspaces, setWorkspaces] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -58,7 +58,6 @@ export default function ConfigurationPage() {
         else if (res.name.includes("D455")) setCameraType("D455");
         else if (res.name.includes("D415")) setCameraType("D415");
         else if (res.name.includes("D405")) setCameraType("D405");
-        else setCameraType("webcam");
       }
     });
   }, []);
@@ -146,9 +145,9 @@ export default function ConfigurationPage() {
               <label className="text-sm font-medium text-secondary">Camera</label>
               <div className="col-span-3">
                 <Select value={cameraType} onChange={(e) => setCameraType(e.target.value)}>
+                  <option value="" disabled>Select Camera...</option>
                   <option value="D435i">D435i</option>
                   <option value="D455">D455</option>
-                  <option value="webcam">System Webcam</option>
                 </Select>
               </div>
             </div>
@@ -322,9 +321,9 @@ export default function ConfigurationPage() {
                     {workspaces.map(w => <option key={w} value={w}>{w}</option>)}
                   </Select>
                 )}
-                <Button 
-                  variant="secondary" 
-                  onClick={handleDelete} 
+                <Button
+                  variant="secondary"
+                  onClick={handleDelete}
                   disabled={!workspaces.includes(workspaceName)}
                   title="Delete Workspace"
                   className="px-3"

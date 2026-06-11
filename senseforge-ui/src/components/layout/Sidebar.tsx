@@ -91,20 +91,6 @@ export function Sidebar() {
         </Link>
       </nav>
 
-      {/* Status Footer */}
-      <div className="p-4 border-t border-subtle bg-surface shrink-0 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-secondary">System</span>
-          <div className="flex gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green" />
-            <span className="w-1.5 h-1.5 rounded-full bg-green" />
-          </div>
-        </div>
-        <Badge variant="connected" className="w-full justify-center">
-          <Wifi className="w-3 h-3 mr-1.5" />
-          D435i Ready
-        </Badge>
-      </div>
     </aside>
   );
 }

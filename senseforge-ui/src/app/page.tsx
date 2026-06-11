@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
   const [sysStats, setSysStats] = React.useState({ cpu: 0, ram: 0 });
   const [cameraConnected, setCameraConnected] = React.useState(false);
+  const [cameraName, setCameraName] = React.useState("No Camera");
 
   React.useEffect(() => {
     const hour = new Date().getHours();
@@ -31,7 +32,8 @@ export default function DashboardPage() {
       const stats = await getSystemStats();
       setSysStats(stats);
       const cam = await checkCameraStatus();
-      setCameraConnected(cam.connected);
+      setCameraConnected(cam.name !== "No Camera");
+      setCameraName(cam.name);
     };
 
     fetchStats();
@@ -65,12 +67,12 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <div className="text-xl font-semibold">{cameraConnected ? "D435i Detected" : "No Camera"}</div>
+            <div className="text-xl font-semibold">{cameraConnected ? cameraName : "No Camera Connected"}</div>
             <div className="flex items-center justify-between">
               {cameraConnected ? (
-                <Badge variant="connected">Live</Badge>
+                <Badge variant="connected">External Connected</Badge>
               ) : (
-                <Badge variant="ready">Disconnected</Badge>
+                <Badge variant="disconnected">Disconnected</Badge>
               )}
               <span className="text-sm text-secondary">{cameraConnected ? "30 FPS" : "-- FPS"}</span>
             </div>
@@ -135,7 +137,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-secondary">Gazebo</span>
-                <Badge variant="ready">Idle</Badge>
+                <Badge variant="disconnected">Idle</Badge>
               </div>
             </div>
           </CardContent>
